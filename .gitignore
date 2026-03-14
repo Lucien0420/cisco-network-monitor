@@ -18,6 +18,7 @@ logs/
 # Data (raw metrics, exports, usage logs)
 data/
 sim_data/
+*.db
 
 # Demo materials (presentation prep, not for public)
 demo/
