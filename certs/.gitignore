@@ -1,0 +1,2 @@
+# Do not commit certificates and private keys
+*.pem

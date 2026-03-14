@@ -1,0 +1,31 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Sensitive config (credentials)
+devices.json
+
+# Certificates and private keys
+certs/*.pem
+
+# Logs
+logs/
+*.log
+
+# Data (raw metrics, exports, usage logs)
+data/
+sim_data/
+
+# Demo materials (presentation prep, not for public)
+demo/
+
+# Environment variables
+.env
+.env.*
+
+# IDE (common)
+.idea/
+.vscode/

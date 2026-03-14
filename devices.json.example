@@ -1,0 +1,62 @@
+[
+  {
+    "name": "DevNet_Catalyst9000",
+    "ip": "devnetsandboxiosxec9k.cisco.com",
+    "port": 22,
+    "username": "YOUR_DEVNET_USERNAME",
+    "password": "YOUR_DEVNET_PASSWORD",
+    "device_type": "cisco_ios",
+    "timeout": 15,
+    "global_delay_factor": 2,
+    "collect_commands": [
+      { "key": "version", "command": "show version" },
+      { "key": "cpu", "command": "show processes cpu" },
+      { "key": "memory", "command": "show memory statistics" },
+      { "key": "interfaces", "command": "show interfaces status" },
+      { "key": "vlan", "command": "show vlan brief" },
+      { "key": "interfaces_summary", "command": "show interfaces summary" }
+    ]
+  },
+  {
+    "name": "Switch_1_Fake",
+    "ip": "127.0.0.1",
+    "port": 2221,
+    "username": "switch",
+    "password": "switch123",
+    "device_type": "cisco_ios",
+    "collect_commands": [
+      { "key": "temperature", "command": "show system temperature" },
+      { "key": "cpu", "command": "show processes cpu" }
+    ]
+  },
+  {
+    "name": "Switch_2_Fake",
+    "ip": "127.0.0.1",
+    "port": 2222,
+    "username": "switch",
+    "password": "switch123",
+    "device_type": "cisco_ios",
+    "collect_commands": [
+      { "key": "temperature", "command": "show system temperature" },
+      { "key": "cpu", "command": "show processes cpu" }
+    ]
+  },
+  {
+    "name": "DevNet_Catalyst9001",
+    "ip": "devnetsandboxiosxec9k.cisco.com",
+    "port": 22,
+    "username": "admin",
+    "password": "C1sco12345",
+    "device_type": "cisco_ios",
+    "timeout": 15,
+    "global_delay_factor": 2,
+    "collect_commands": [
+      { "key": "version", "command": "show version" },
+      { "key": "cpu", "command": "show processes cpu" },
+      { "key": "memory", "command": "show memory statistics" },
+      { "key": "interfaces", "command": "show interfaces status" },
+      { "key": "vlan", "command": "show vlan brief" },
+      { "key": "interfaces_summary", "command": "show interfaces summary" }
+    ]
+  }
+]
