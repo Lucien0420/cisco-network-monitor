@@ -13,30 +13,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 
-from database import TestDatabase
+from config import JWT_SECRET as SECRET_KEY, ADMIN_USER, ADMIN_PWD, DB_DIR, DB_NAME, DEVICES_FILE, ACCESS_TOKEN_EXPIRE_MINUTES
+from database import MonitorDatabase
+
+ALGORITHM = "HS256"
 
 # Dynamic import wrapper to support /reload-parsers hot-reload
 def _get_clean_fns():
     import data_cleaning
     return data_cleaning.load_and_clean_from_db, data_cleaning.to_time_series_rows
-
-# Environment variables (do not hardcode secrets)
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
-SECRET_KEY = os.environ.get("JWT_SECRET", "change-me-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PWD = os.environ.get("ADMIN_PWD", "admin")
-
-# Must match main.py defaults
-DB_DIR = os.environ.get("MONITOR_DB_DIR", "data")
-DB_NAME = os.environ.get("MONITOR_DB_NAME", "dvt_monitor_results.db")
-DEVICES_FILE = os.environ.get("MONITOR_DEVICES_FILE", "devices.json")
 
 app = FastAPI(
     title="Switch Monitor API",
@@ -56,7 +41,7 @@ security = HTTPBearer(auto_error=False)
 
 
 def _get_db():
-    return TestDatabase(db_dir=DB_DIR, db_name=DB_NAME)
+    return MonitorDatabase(db_dir=DB_DIR, db_name=DB_NAME)
 
 
 def create_access_token(data: dict) -> str:

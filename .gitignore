@@ -23,6 +23,9 @@ sim_data/
 # Demo materials (presentation prep, not for public)
 demo/
 
+# Internal collaboration docs (AI logs, strategy notes)
+docs/internal/
+
 # Environment variables
 .env
 .env.*

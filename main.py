@@ -4,19 +4,16 @@ Loads devices from devices.json, runs concurrent monitoring tasks, and writes to
 """
 import json
 import logging
+from config import DB_DIR, DB_NAME, DEVICES_FILE
 from logger_config import setup_logger
-from TestScheduler import TestScheduler
+from scheduler import DeviceScheduler
 from monitor import real_time_monitor_task
-from database import TestDatabase
+from database import MonitorDatabase
 
 main_logger = setup_logger('main', log_level=logging.INFO)
 
-# Database directory (can share with JSONL output when devices use data_dir)
-DB_DIR = 'data'
-DB_NAME = 'dvt_monitor_results.db'
-
 if __name__ == "__main__":
-    devices_file = "devices.json"
+    devices_file = DEVICES_FILE
     devices = []
 
     try:
@@ -39,7 +36,7 @@ if __name__ == "__main__":
 
     # Shared database instance for real-time writes from monitor loop
     try:
-        db = TestDatabase(db_dir=DB_DIR, db_name=DB_NAME)
+        db = MonitorDatabase(db_dir=DB_DIR, db_name=DB_NAME)
     except Exception as e:
         main_logger.error(f"Database init failed: {e}", exc_info=True)
         exit(1)
@@ -49,7 +46,7 @@ if __name__ == "__main__":
     # Pass db to real_time_monitor_task so each data_point is written immediately
     task_func = lambda dev: real_time_monitor_task(dev, db=db)
 
-    with TestScheduler(max_workers=3) as scheduler:
+    with DeviceScheduler(max_workers=3) as scheduler:
         report = scheduler.run_tasks(
             task_func=task_func,
             target_list=devices,

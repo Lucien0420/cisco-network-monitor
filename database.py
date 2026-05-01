@@ -6,7 +6,7 @@ from logger_config import setup_logger
 # Database module logger
 db_logger = setup_logger('database')
 
-class TestDatabase:
+class MonitorDatabase:
     def __init__(self, db_dir='data', db_name='dvt_monitor_results.db'):
         """Initialize database and create tables."""
         

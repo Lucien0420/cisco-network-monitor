@@ -5,7 +5,7 @@ from logger_config import setup_logger
 
 scheduler_logger = setup_logger('scheduler')
 
-class TestScheduler:
+class DeviceScheduler:
     def __init__(self, max_workers=10):
         self.max_workers = max_workers
         self.executor = None

@@ -1,21 +1,42 @@
 # monitor.py
-from driver import ProfessionalSwitchDriver
-from logger_config import setup_logger
-
-monitor_logger = setup_logger('monitor')
 import time
 import json
 import os
 from datetime import datetime
+from driver import ProfessionalSwitchDriver
+from logger_config import setup_logger
+
+monitor_logger = setup_logger('monitor')
+
+_MAX_RECONNECT_RETRIES = 3
+_RECONNECT_BASE_DELAY = 5  # seconds; doubles each attempt (5 → 10 → 20)
+
+
+def _attempt_reconnect(driver, device_id):
+    """
+    Try to reconnect with exponential backoff.
+    Returns True if reconnected within _MAX_RECONNECT_RETRIES attempts.
+    """
+    for attempt in range(1, _MAX_RECONNECT_RETRIES + 1):
+        delay = _RECONNECT_BASE_DELAY * (2 ** (attempt - 1))
+        monitor_logger.warning(
+            f"[{device_id}] Reconnect attempt {attempt}/{_MAX_RECONNECT_RETRIES} — waiting {delay}s..."
+        )
+        time.sleep(delay)
+        if driver.reconnect():
+            monitor_logger.info(f"[{device_id}] Reconnected successfully (attempt {attempt})")
+            return True
+    monitor_logger.error(f"[{device_id}] All {_MAX_RECONNECT_RETRIES} reconnect attempts failed")
+    return False
 
 def real_time_monitor_task(device_info, db=None):
     """
-    Real-time monitoring task (compatible with TestScheduler).
+    Real-time monitoring task for a single device (runs inside DeviceScheduler thread).
 
     Args:
         device_info: Dict with ip/host, username, password, device_type,
             monitor_duration (seconds), monitor_max_iterations.
-        db: Optional TestDatabase instance; if provided, each data_point is written immediately.
+        db: Optional MonitorDatabase instance; if provided, each data_point is written immediately.
 
     Returns:
         Monitoring result dict.
@@ -82,15 +103,26 @@ def real_time_monitor_task(device_info, db=None):
 
             # 1. Active collection: run collect_commands per device
             metrics = {}
+            connection_lost = False
             for item in collect_commands:
                 key = item.get('key', 'unknown')
                 cmd = item.get('command', '')
                 if not cmd:
                     continue
                 result = driver.send_command(cmd)
-                metrics[key] = result if result is not None else ''
                 if result is None:
                     error_count += 1
+                    if not driver.is_alive():
+                        monitor_logger.warning(f"[{device_id}] Connection lost on command '{key}'")
+                        if _attempt_reconnect(driver, device_id):
+                            result = driver.send_command(cmd)  # retry once after reconnect
+                        else:
+                            connection_lost = True
+                            break
+                metrics[key] = result if result is not None else ''
+
+            if connection_lost:
+                break
 
             # 2. Passive: read switch logs via read_channel (optional)
             unexpected_logs = driver.read_channel()

@@ -89,6 +89,20 @@ class ProfessionalSwitchDriver:
             driver_logger.error(f"Read channel failed: {e}", exc_info=True)
             return ""
 
+    def is_alive(self):
+        """Return True if the SSH transport is still active."""
+        if not self.conn:
+            return False
+        try:
+            return self.conn.is_alive()
+        except Exception:
+            return False
+
+    def reconnect(self):
+        """Close the current connection and attempt to re-establish it."""
+        self.close()
+        return self.connect()
+
     def close(self):
         """Close connection and handle exceptions."""
         if self.conn:
@@ -99,3 +113,15 @@ class ProfessionalSwitchDriver:
                 driver_logger.warning(f"Close connection error: {e}", exc_info=True)
             finally:
                 self.conn = None
+
+    def __enter__(self):
+        """Context manager entry — connect on enter, raise on failure."""
+        if not self.connect():
+            host = self.device_info.get('ip') or self.device_info.get('host', 'unknown')
+            raise ConnectionError(f"Failed to connect to {host}")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit — always close the connection."""
+        self.close()
+        return False
