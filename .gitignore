@@ -29,6 +29,7 @@ docs/internal/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # IDE (common)
 .idea/
