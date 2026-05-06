@@ -48,6 +48,11 @@ def parse_cpu(raw: str) -> Optional[float]:
     if "not found" in raw.lower():
         return 0.0
 
+    # Look for "5-second CPU: X.X %"
+    m = re.search(r'5-second CPU:\s*(\d+(?:\.\d+)?)\s*%', raw, re.IGNORECASE)
+    if m:
+        return float(m.group(1))
+
     m = re.search(r'(?:cpu|utilization|usage)?\s*[:\s]*(\d+(?:\.\d+)?)\s*%?', raw, re.IGNORECASE)
     if m:
         return float(m.group(1))
@@ -102,12 +107,13 @@ def parse_memory(raw: str) -> Optional[float]:
     
     for line in str(raw).strip().splitlines():
         if 'Processor' in line or 'processor' in line.lower():
-            # Extract Total(b) and Used(b) (typically 2nd and 3rd large numbers)
-            nums = re.findall(r'\b(\d{6,})\b', line)
-            if len(nums) >= 2:
+            # Extract numbers. We expect: Head, Total, Used, Free, ...
+            # We skip the first number (Head) and take the next two (Total, Used)
+            nums = re.findall(r'\b(\d{5,})\b', line)
+            if len(nums) >= 3:
                 try:
-                    total = int(nums[0])  # Total(b)
-                    used = int(nums[1])   # Used(b)
+                    total = int(nums[1])  # Total(b)
+                    used = int(nums[2])   # Used(b)
                     if total > 0:
                         return round(used / total * 100.0, 2)
                 except (ValueError, IndexError):
@@ -160,6 +166,28 @@ def parse_interfaces_summary(raw: str) -> Optional[float]:
     return float(interfaces_up) if interfaces_up > 0 else 0.0
 
 
+def parse_inventory(raw: str) -> List[Dict[str, str]]:
+    """Extract inventory info from 'show inventory'."""
+    if not raw or not str(raw).strip():
+        return []
+    
+    results = []
+    # Match NAME: "...", DESCR: "..." and PID: ..., VID: ..., SN: ...
+    # This is a simple parser for the common Cisco format
+    name_descr_blocks = re.findall(r'NAME:\s*"([^"]*)",\s*DESCR:\s*"([^"]*)"', raw)
+    pid_vid_sn_blocks = re.findall(r'PID:\s*([^,]*),\s*VID:\s*([^,]*),\s*SN:\s*(\S+)', raw)
+    
+    for i in range(min(len(name_descr_blocks), len(pid_vid_sn_blocks))):
+        results.append({
+            'name': name_descr_blocks[i][0].strip(),
+            'descr': name_descr_blocks[i][1].strip(),
+            'pid': pid_vid_sn_blocks[i][0].strip(),
+            'vid': pid_vid_sn_blocks[i][1].strip(),
+            'sn': pid_vid_sn_blocks[i][2].strip(),
+        })
+    return results
+
+
 # Parser registry: metrics key -> parse function (extensible)
 PARSERS: Dict[str, Callable[[str], Any]] = {
     'temperature': parse_temperature,
@@ -169,6 +197,7 @@ PARSERS: Dict[str, Callable[[str], Any]] = {
     'version': parse_version,
     'vlan': parse_vlan,
     'interfaces_summary': parse_interfaces_summary,
+    'inventory': parse_inventory,
 }
 
 

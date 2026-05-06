@@ -1,0 +1,85 @@
+services:
+  # --- Professional Switch Simulators ---
+  # We simulate 5 switches on different ports to demonstrate concurrency
+  simulator-1:
+    build: .
+    command: python sim/switch_simulator.py --port 2222
+    expose:
+      - "2222"
+    restart: unless-stopped
+
+  simulator-2:
+    build: .
+    command: python sim/switch_simulator.py --port 2223
+    expose:
+      - "2223"
+    restart: unless-stopped
+
+  simulator-3:
+    build: .
+    command: python sim/switch_simulator.py --port 2224
+    expose:
+      - "2224"
+    restart: unless-stopped
+
+  simulator-4:
+    build: .
+    command: python sim/switch_simulator.py --port 2225
+    expose:
+      - "2225"
+    restart: unless-stopped
+
+  simulator-5:
+    build: .
+    command: python sim/switch_simulator.py --port 2226
+    expose:
+      - "2226"
+    restart: unless-stopped
+
+  # --- Data Collection Engine ---
+  monitor:
+    build: .
+    command: python main.py
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./devices.json:/app/devices.json
+    environment:
+      - MONITOR_DB_DIR=data
+      - MONITOR_DEVICES_FILE=devices.json
+    depends_on:
+      - simulator-1
+      - simulator-2
+      - simulator-3
+      - simulator-4
+      - simulator-5
+    restart: unless-stopped
+
+  # --- REST API (FastAPI) ---
+  api:
+    build: .
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  # --- Dashboard (Streamlit) ---
+  ui:
+    build: .
+    command: streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - DEFAULT_API_BASE=http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  data:
+  logs:

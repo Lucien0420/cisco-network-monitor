@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Pass db to real_time_monitor_task so each data_point is written immediately
     task_func = lambda dev: real_time_monitor_task(dev, db=db)
 
-    with DeviceScheduler(max_workers=3) as scheduler:
+    with DeviceScheduler(max_workers=5) as scheduler:
         report = scheduler.run_tasks(
             task_func=task_func,
             target_list=devices,

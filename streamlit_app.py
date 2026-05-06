@@ -44,6 +44,25 @@ def login_for_token(base: str, username: str, password: str) -> str | None:
 
 st.set_page_config(page_title="Switch Monitor Dashboard", page_icon="📊", layout="wide")
 
+# Custom CSS to fix the red border and improve UI
+st.markdown("""
+    <style>
+    /* Remove the red border from multiselect */
+    .stMultiSelect [data-baseweb="select"] {
+        border-color: #e0e0e0 !important;
+    }
+    /* Change tag background from red to professional blue */
+    span[data-baseweb="tag"] {
+        background-color: #1c83e1 !important;
+        color: white !important;
+    }
+    /* Improve button styling */
+    .stButton>button {
+        border-radius: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Not logged in: show login form
 if "access_token" not in st.session_state:
     st.title("🔐 Login")
@@ -69,12 +88,66 @@ if "access_token" not in st.session_state:
 token = st.session_state["access_token"]
 api_base = st.session_state.get("api_base", DEFAULT_API_BASE)
 
+# --- INITIAL STATE ---
+if "limit" not in st.session_state:
+    st.session_state["limit"] = 500
+
+# Health check (no token required)
+health = fetch_json(api_base, "/health")
+if not health or health.get("status") != "ok":
+    st.warning("Cannot connect to API. Ensure it is running: `uvicorn api:app --reload`")
+    st.stop()
+if not health.get("parsers_ok", True):
+    st.warning("⚠️ API parsers outdated (missing memory/interfaces_summary). Run `bash restart_all.sh`.")
+
+# --- DATA FETCHING ---
+cleaned_res = fetch_json(api_base, "/cleaned", params={"limit": st.session_state["limit"]}, token=token)
+ts_res = fetch_json(api_base, "/time_series", params={"limit": st.session_state["limit"], "metrics": "cpu,memory,version,vlan,interfaces_summary"}, token=token)
+
+if not cleaned_res:
+    st.error("Failed to fetch data (token may have expired, please login again)")
+    st.stop()
+
+raw_records = cleaned_res.get("records", [])
+raw_ts_rows = (ts_res or {}).get("rows", []) if ts_res else []
+# -------------------------------------------------------
+
 with st.sidebar:
     st.header("Settings")
     st.caption("For monitor.switch.test, use http://monitor.switch.test:8000")
-    api_base = st.text_input("API URL", value=api_base, key="api_base_input")
-    st.session_state["api_base"] = api_base
-    limit = st.number_input("Record limit", min_value=10, max_value=5000, value=500, step=50)
+    api_base_input = st.text_input("API URL", value=api_base, key="api_base_input")
+    st.session_state["api_base"] = api_base_input
+    limit = st.number_input("Record limit", min_value=10, max_value=5000, value=st.session_state["limit"], step=50, key="limit_input")
+    st.session_state["limit"] = limit
+    
+    st.divider()
+    st.subheader("Device Filter")
+    
+    # Get unique devices from raw_records
+    all_devices = sorted(list(set([r.get("device") for r in raw_records if r.get("device")])))
+    
+    if all_devices:
+        # Initialize widget state if not present
+        if "device_selector_widget" not in st.session_state:
+            st.session_state["device_selector_widget"] = all_devices
+
+        col1, col2 = st.columns(2)
+        if col1.button("Select All", use_container_width=True):
+            st.session_state["device_selector_widget"] = all_devices
+            st.rerun()
+        if col2.button("Clear All", use_container_width=True):
+            st.session_state["device_selector_widget"] = []
+            st.rerun()
+            
+        # Use the widget key directly for state management
+        selected_devices = st.multiselect(
+            "Show devices",
+            options=all_devices,
+            key="device_selector_widget"
+        )
+    else:
+        selected_devices = []
+
     st.divider()
     if st.button("🔄 Reload data", use_container_width=True):
         st.rerun()
@@ -100,30 +173,22 @@ with st.sidebar:
             del st.session_state["api_base"]
         st.rerun()
 
-api_base = st.session_state.get("api_base", DEFAULT_API_BASE)
 st.title("📊 Switch Monitor Dashboard")
 st.caption("Data source: FastAPI (JWT) → SQLite + data_cleaning")
 
-# Health check (no token required)
-health = fetch_json(api_base, "/health")
-if not health or health.get("status") != "ok":
-    st.warning("Cannot connect to API. Ensure it is running: `uvicorn api:app --reload`")
-    st.stop()
-if not health.get("parsers_ok", True):
-    st.warning("⚠️ API parsers outdated (missing memory/interfaces_summary). Run `bash restart_all.sh`.")
+# Filter data based on selected devices from sidebar
+selected_devices = st.session_state.get("device_selector_widget", [])
+if selected_devices:
+    records = [r for r in raw_records if r.get("device") in selected_devices]
+    ts_rows = [r for r in raw_ts_rows if r.get("device") in selected_devices]
+elif all_devices: # If nothing selected but devices exist, show nothing
+    records = []
+    ts_rows = []
+else:
+    records = raw_records
+    ts_rows = raw_ts_rows
 
-# Token-required API
-cleaned_res = fetch_json(api_base, "/cleaned", params={"limit": limit}, token=token)
-ts_res = fetch_json(api_base, "/time_series", params={"limit": limit, "metrics": "cpu,memory,version,vlan,interfaces_summary"}, token=token)
-
-if not cleaned_res:
-    st.error("Failed to fetch data (token may have expired, please login again)")
-    st.stop()
-
-records = cleaned_res.get("records", [])
-ts_rows = (ts_res or {}).get("rows", []) if ts_res else []
-
-st.success(f"Loaded **{len(records)}** cleaned records, **{len(ts_rows)}** time-series rows.")
+st.success(f"Loaded **{len(records)}** filtered records, **{len(ts_rows)}** time-series rows.")
 
 if records:
     df = pd.DataFrame(records)
