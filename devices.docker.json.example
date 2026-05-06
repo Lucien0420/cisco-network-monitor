@@ -32,5 +32,56 @@
       { "key": "interfaces_summary", "command": "show interfaces summary" },
       { "key": "inventory", "command": "show inventory" }
     ]
+  },
+  {
+    "name": "LAB-HSZ-DIST-01",
+    "ip": "simulator-3",
+    "port": 2224,
+    "username": "switch",
+    "password": "switch123",
+    "device_type": "cisco_ios",
+    "collect_commands": [
+      { "key": "version", "command": "show version" },
+      { "key": "cpu", "command": "show processes cpu" },
+      { "key": "memory", "command": "show memory statistics" },
+      { "key": "interfaces", "command": "show interfaces status" },
+      { "key": "vlan", "command": "show vlan brief" },
+      { "key": "interfaces_summary", "command": "show interfaces summary" },
+      { "key": "inventory", "command": "show inventory" }
+    ]
+  },
+  {
+    "name": "LAB-HSZ-ACC-01",
+    "ip": "simulator-4",
+    "port": 2225,
+    "username": "switch",
+    "password": "switch123",
+    "device_type": "cisco_ios",
+    "collect_commands": [
+      { "key": "version", "command": "show version" },
+      { "key": "cpu", "command": "show processes cpu" },
+      { "key": "memory", "command": "show memory statistics" },
+      { "key": "interfaces", "command": "show interfaces status" },
+      { "key": "vlan", "command": "show vlan brief" },
+      { "key": "interfaces_summary", "command": "show interfaces summary" },
+      { "key": "inventory", "command": "show inventory" }
+    ]
+  },
+  {
+    "name": "LAB-TXG-CORE-01",
+    "ip": "simulator-5",
+    "port": 2226,
+    "username": "switch",
+    "password": "switch123",
+    "device_type": "cisco_ios",
+    "collect_commands": [
+      { "key": "version", "command": "show version" },
+      { "key": "cpu", "command": "show processes cpu" },
+      { "key": "memory", "command": "show memory statistics" },
+      { "key": "interfaces", "command": "show interfaces status" },
+      { "key": "vlan", "command": "show vlan brief" },
+      { "key": "interfaces_summary", "command": "show interfaces summary" },
+      { "key": "inventory", "command": "show inventory" }
+    ]
   }
 ]

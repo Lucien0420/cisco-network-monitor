@@ -10,7 +10,7 @@
 
 ![儀表板截圖](images/dashboard.png)
 
-**Demo 影片（YouTube）：**[觀看完整展示](https://youtu.be/_uXNgmTwpDw) — 包含多設備並發採集、即時指標圖表與 HTTPS 設定。
+**Demo 影片（YouTube）：**[觀看完整展示](https://youtu.be/cuApdgCYuGg) — 包含多設備並發採集、即時指標圖表與 HTTPS 設定。
 
 ---
 

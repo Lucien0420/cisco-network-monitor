@@ -10,7 +10,7 @@ A high-performance monitoring engine designed for Cisco network infrastructure (
 
 ![Dashboard Screenshot](images/dashboard.png)
 
-**Demo Video (YouTube):** [Watch Full Demo](https://youtu.be/_uXNgmTwpDw) — Showcasing concurrent polling, real-time metrics, and HTTPS setup.
+**Demo Video (YouTube):** [Watch Full Demo](https://youtu.be/cuApdgCYuGg) — Showcasing concurrent polling, real-time metrics, and HTTPS setup.
 
 ---
 
