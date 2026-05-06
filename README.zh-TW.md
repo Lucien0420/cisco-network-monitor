@@ -1,6 +1,6 @@
 # Cisco Switch Real-time Monitor Engine
 
-[![CI](https://github.com/Lucien0420/cisco-switch-monitor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Lucien0420/cisco-switch-monitor/actions/workflows/ci.yml)
+[![CI](https://github.com/Lucien0420/cisco-network-monitor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Lucien0420/cisco-network-monitor/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
